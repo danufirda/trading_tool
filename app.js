@@ -92,7 +92,7 @@ async function main(){
     }
 
     let message = `ASET IDR: ${format(aset_idr)}`;
-    if(msg_aset!='') message = message + msg_aset;
+    if(msg_aset!='') message = message + msg_aset + `\n\nNOTIF KURS: ${kurs} DELAY: ${interval}`;
     console.log('aset idr', aset_idr);
     if(send_notif){
         sendMsg(telegram_id, message);
