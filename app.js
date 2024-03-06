@@ -61,14 +61,15 @@ async function main(){
 
     let info = await getInfo();
     let aset_idr = 0;
+    let msg_aset = '';
     for(const [key, value] of Object.entries(info.return.balance)){
         if(value!=0){
             if(key=='idr') aset_idr = aset_idr + parseInt(value);
-
             if(key!='idr'){
                 let koin = await cekCoins(key);
                 koin = koin.ticker.sell * value;
                 aset_idr = aset_idr + koin;
+                msg_aset += `\n\nSALDO ${key} : ${value}\nNilai IDR: ${format(parseInt(koin))}`;
             }
         }
     }
@@ -90,7 +91,8 @@ async function main(){
         }
     }
 
-    let message = `Aset INDODAX IDR: ${format(aset_idr)}`;
+    let message = `ASET IDR: ${format(aset_idr)}`;
+    if(msg_aset!='') message = message + msg_aset;
     console.log('aset idr', aset_idr);
     if(send_notif){
         sendMsg(telegram_id, message);
