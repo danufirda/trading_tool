@@ -1,9 +1,7 @@
-const axios = require('axios');
 const fs = require('fs');
-const crypto = require('crypto');
 require('dotenv').config();
-const domain = 'https://indodax.com';
 const { sendMsg } = require('./helper/telegram');
+const { dataAset, getInfo, cekCoins, transHistory } = require('./helper/function');
 let kurs = process.env.KURS_NOTIF;
 let interval = process.env.INTERVAL_SECOND;
 let telegram_id = process.env.TELEGRAM_ID;
@@ -12,41 +10,6 @@ let send_notif = false;
 //sleep
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const cekCoins = async (param) =>{
-    let url = `${domain}/api/ticker/${param}idr`;
-    try{
-        let response = await axios.get(url);
-        return response.data;
-    }catch(error){
-        console.log(error);
-    }
-}
-
-async function getInfo(){
-    const apiUrl = `${domain}/tapi`;
-    const method = 'getInfo';
-    // const postData = `method=${method}&timestamp=${timestamp}&recvWindow=${recvWindow}`;
-    const postData = `method=${method}&timestamp=${Date.now()}`;
-    const signature = crypto.createHmac('sha512', process.env.INDODAX_API_SECRET).update(postData).digest('hex');
-    
-    const headers = {
-        'Key': process.env.INDODAX_API_KEY,
-        'Sign': signature,
-    };
-    
-    let response = {};
-    try {
-        let back = await axios.post(apiUrl, postData, { headers });
-        response = back.data;
-        response.status = true;
-    } catch (error) {
-        console.error('Error:', error.response ? error.response.data : error.message);
-        response = error.response ? error.response.data : error.message;
-        response.status = false;
-    }
-    return response;
 }
 
 function format(val){
@@ -58,7 +21,6 @@ async function main(){
     kurs = process.env.KURS_NOTIF;
     interval = process.env.INTERVAL_SECOND;
     await sleep(interval*1000);
-
     let info = await getInfo();
     let aset_idr = 0;
     let msg_aset = '';
@@ -70,6 +32,12 @@ async function main(){
                 koin = koin.ticker.sell * value;
                 aset_idr = aset_idr + koin;
                 msg_aset += `\n\nSALDO ${key} : ${value}\nNilai IDR: ${format(parseInt(koin))}`;
+
+                let trans = await transHistory(key+'_idr');
+                if(trans?.return?.orders.length > 0){
+                    let old_order = trans.return.orders[0].order_idr;
+                    msg_aset += `\nOrder : ${format(parseInt(old_order))}`;
+                }
             }
         }
     }
@@ -97,6 +65,7 @@ async function main(){
     if(send_notif){
         sendMsg(telegram_id, message);
     }
+    dataAset(aset_idr);
     main();
 }
 
