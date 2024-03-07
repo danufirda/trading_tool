@@ -1,7 +1,7 @@
 const fs = require('fs');
 require('dotenv').config();
 const { sendMsg } = require('./helper/telegram');
-const { dataAset, getInfo, cekCoins, transHistory } = require('./helper/function');
+const { formatRibu, dataAset, getInfo, cekCoins, transHistory } = require('./helper/function');
 let kurs = process.env.KURS_NOTIF;
 let interval = process.env.INTERVAL_SECOND;
 let telegram_id = process.env.TELEGRAM_ID;
@@ -10,10 +10,6 @@ let send_notif = false;
 //sleep
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function format(val){
-    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 async function main(){
@@ -31,12 +27,12 @@ async function main(){
                 let koin = await cekCoins(key);
                 koin = koin.ticker.sell * value;
                 aset_idr = aset_idr + koin;
-                msg_aset += `\n\nSALDO ${key} : ${value}\nNilai IDR: ${format(parseInt(koin))}`;
+                msg_aset += `\n\nSALDO ${key} : ${value}\nNilai IDR: ${formatRibu(parseInt(koin))}`;
 
                 let trans = await transHistory(key+'_idr');
                 if(trans?.return?.orders.length > 0){
                     let old_order = trans.return.orders[0].order_idr;
-                    msg_aset += `\nOrder : ${format(parseInt(old_order))}`;
+                    msg_aset += `\nOrder : ${formatRibu(parseInt(old_order))}`;
                 }
             }
         }
@@ -59,7 +55,7 @@ async function main(){
         }
     }
 
-    let message = `ASET IDR: ${format(aset_idr)}`;
+    let message = `ASET IDR: ${formatRibu(aset_idr)}`;
     if(msg_aset!='') message = message + msg_aset + `\n\nNOTIF KURS: ${kurs} DELAY: ${interval}`;
     console.log('aset idr', aset_idr);
     if(send_notif){
@@ -68,6 +64,5 @@ async function main(){
     dataAset(aset_idr);
     main();
 }
-
 main();
 

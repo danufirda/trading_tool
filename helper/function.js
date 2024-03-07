@@ -7,6 +7,12 @@ const { DateTime } = require('luxon');
 const domain = process.env.DOMAIN;
 const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
+const bulan_ini = () =>{
+    return bulan[DateTime.now().month-1];
+}
+function formatRibu(val){
+    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 const ensureFolderExists = (folderPath) => {
     const absolutePath = path.resolve(folderPath);
     if (!fs.existsSync(absolutePath)) {
@@ -97,7 +103,6 @@ const dataAset = (nominal) => {
         let key_exist = false;
         for(const [key, value] of Object.entries(old_json)){
             if(Object.keys(value) == tgl_ini){
-                console.log("masuk same object");
                 if(nominal > Object.values(value)[0]){
                     new_json.push({[Object.keys(value)]: nominal});
                 }else{
@@ -105,12 +110,10 @@ const dataAset = (nominal) => {
                 }
                 key_exist = true;
             }else{
-                console.log("masuk not same object");
                 new_json.push({[Object.keys(value)]: Object.values(value)[0]});
             }
         }
         if(!key_exist){
-            console.log("masuk neww object");
             new_json.push({[tgl_ini]: nominal});
         }
         fs.writeFileSync(`${folder}/${bulan_ini}.json`, JSON.stringify(new_json));
@@ -129,5 +132,7 @@ module.exports = {
     getInfo,
     cekCoins,
     dataAset,
-    ensureFileExists
+    ensureFileExists,
+    bulan_ini,
+    formatRibu
 }
